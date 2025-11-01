@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Markdown files
 *.md
+
+# Exempt README.md from being ignored
+!README.md
