@@ -48,19 +48,31 @@ export default function LawyerSidebar({ onTourStart }: LawyerSidebarProps) {
       <div className="flex flex-col h-full">
         {/* Logo & Collapse Button */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-              HC
-            </div>
-            {isOpen && <span className="font-bold text-gray-900 text-lg">HakiChain</span>}
-          </div>
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
-            title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
-          >
-            {isOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-          </button>
+          {isOpen ? (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                  HC
+                </div>
+                <span className="font-bold text-gray-900 text-lg">HakiChain</span>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                title="Collapse sidebar"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsOpen(true)}
+              className="w-full p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition flex items-center justify-center"
+              title="Expand sidebar"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Main Menu */}

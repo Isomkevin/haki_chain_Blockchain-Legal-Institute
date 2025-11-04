@@ -11,6 +11,20 @@ export default function HakiLens() {
   const [sortBy, setSortBy] = useState("date_created")
   const [aiQuestion, setAiQuestion] = useState("")
   const [showTour, setShowTour] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const [searchResult, setSearchResult] = useState("")
+
+  const handleDeepResearch = () => {
+    if (!searchUrl) {
+      alert("Please enter a URL to research")
+      return
+    }
+    setSearching(true)
+    setTimeout(() => {
+      setSearchResult(`Deep Research Results for: ${searchUrl}\n\nMode: ${deepResearchMode}\n\n[This is a placeholder for deep research results. Backend integration pending.]`)
+      setSearching(false)
+    }, 2000)
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -86,8 +100,12 @@ export default function HakiLens() {
                         placeholder="https://example.com/case-page-or-listing"
                         className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                      <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition">
-                        Deep Research
+                      <button
+                        onClick={handleDeepResearch}
+                        disabled={searching}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition disabled:opacity-50"
+                      >
+                        {searching ? "Searching..." : "Deep Research"}
                       </button>
                     </div>
                     <p className="mt-2 text-sm text-gray-500">
@@ -96,6 +114,19 @@ export default function HakiLens() {
                       {deepResearchMode === "single-case" && "Research single case detail page"}
                     </p>
                   </div>
+
+                  {searchResult && (
+                    <div className="mt-6 bg-white border border-gray-200 rounded-lg p-6">
+                      <h3 className="font-medium text-gray-900 mb-3">Research Results</h3>
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap">{searchResult}</pre>
+                      <button
+                        onClick={() => setSearchResult("")}
+                        className="mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                      >
+                        Clear Results
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

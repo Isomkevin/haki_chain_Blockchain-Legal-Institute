@@ -21,7 +21,7 @@ import {
   Wand2,
   Eye,
 } from "lucide-react"
-import OnboardingTour from "../components/OnboardingTour"
+import TourGuide from "../components/TourGuide"
 import LawyerSidebar from "../components/LawyerSidebar"
 
 export default function Dashboard() {
@@ -102,9 +102,17 @@ export default function Dashboard() {
 
   if (profile?.user_type === "lawyer") {
     return (
-      <div className="flex">
+      <div className="flex min-h-screen bg-gray-50">
+        {showTour && (
+          <TourGuide
+            onComplete={() => {
+              localStorage.setItem(`tour-seen-${profile.id}`, "true")
+              setShowTour(false)
+            }}
+          />
+        )}
         <LawyerSidebar onTourStart={() => setShowTour(true)} />
-        <div className="flex-1 md:ml-0">
+        <div className="flex-1 ml-[280px]">
           <LawyerDashboard
             applications={applications}
             milestones={milestones}
@@ -112,14 +120,6 @@ export default function Dashboard() {
             profile={profile}
             activeTab={activeTab}
           />
-          {showTour && (
-            <OnboardingTour
-              onComplete={() => {
-                localStorage.setItem(`tour-seen-${profile.id}`, "true")
-                setShowTour(false)
-              }}
-            />
-          )}
         </div>
       </div>
     )

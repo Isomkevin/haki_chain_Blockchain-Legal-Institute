@@ -17,6 +17,7 @@ import HakiDraft from "./pages/HakiDraft"
 import HakiReview from "./pages/HakiReview"
 import HakiReminders from "./pages/HakiReminders"
 import HakiDocs from "./pages/HakiDocs"
+import Settings from "./pages/Settings"
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
             <Route path="/haki-review" element={<HakiReview />} />
             <Route path="/haki-reminders" element={<HakiReminders />} />
             <Route path="/haki-docs" element={<HakiDocs />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/documentation" element={<Documentation />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
           </Routes>
