@@ -3,6 +3,7 @@ import LawyerSidebar from "../components/LawyerSidebar"
 import { Eye, Upload, MessageSquare, FileText, Edit, FileSignature, Send, AlertCircle } from "lucide-react"
 import TourGuide from "../components/TourGuide"
 import { chatCompletion } from "../lib/llm"
+import { formatAnalysisResponse } from "../lib/legalFormatter"
 import { useProcess } from "../contexts/ProcessContext"
 
 interface ChatMessage {
@@ -16,8 +17,9 @@ interface ChatMessage {
 export default function HakiReview() {
   const { getProcessState, updateProcessState } = useProcess()
   const reviewState = getProcessState("hakiReview")
-  const { showTour, message, activeTab, uploadedFile, chatMessages, isLoading } = reviewState
+  const { showTour, message, activeTab, uploadedFile, uploadedFileContent, chatMessages, isLoading } = reviewState
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const MAX_CONTEXT_CHARS = 6000
 
   useEffect(() => {
     console.log("[HakiReview] mounted")
@@ -34,13 +36,49 @@ export default function HakiReview() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [chatMessages])
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const extractTextFromFile = async (file: File) => {
+    if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+      const pdfjs = (await import("pdfjs-dist/build/pdf")) as any
+      const workerSrc = await import("pdfjs-dist/build/pdf.worker?url")
+      pdfjs.GlobalWorkerOptions.workerSrc = workerSrc.default || workerSrc
+
+      const uint8Array = new Uint8Array(await file.arrayBuffer())
+      const pdf = await pdfjs.getDocument({ data: uint8Array }).promise
+      let extracted = ""
+
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+        const page = await pdf.getPage(pageNumber)
+        const content = await page.getTextContent()
+        extracted += content.items.map((item: any) => item.str).join(" ") + "\n"
+
+        if (extracted.length >= MAX_CONTEXT_CHARS * 1.2) {
+          break
+        }
+      }
+
+      return extracted
+    }
+
+    if (file.name.toLowerCase().endsWith(".docx")) {
+      const mammoth = (await import("mammoth")) as any
+      const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })
+      return value
+    }
+
+    return await file.text()
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
+    if (!file) return
+
+    try {
+      const content = await extractTextFromFile(file)
+
       updateProcessState("hakiReview", (prev) => {
         const fileMessage: ChatMessage = {
           id: Date.now().toString(),
-          text: `Document "${file.name}" has been uploaded. I can help you review, analyze, or answer questions about this document.`,
+          text: `I've ingested "${file.name}". Ask me anything about it.`,
           sender: "bot",
           timestamp: new Date(),
         }
@@ -48,9 +86,24 @@ export default function HakiReview() {
         return {
           ...prev,
           uploadedFile: file.name,
+          uploadedFileContent: content.slice(0, MAX_CONTEXT_CHARS),
           chatMessages: [...prev.chatMessages, fileMessage],
         }
       })
+    } catch (error) {
+      updateProcessState("hakiReview", (prev) => ({
+        ...prev,
+        chatMessages: [
+          ...prev.chatMessages,
+          {
+            id: Date.now().toString(),
+            text: `Failed to read "${file.name}": ${error instanceof Error ? error.message : "Unknown error"}`,
+            sender: "bot",
+            timestamp: new Date(),
+            error: true,
+          },
+        ],
+      }))
     }
   }
 
@@ -90,9 +143,18 @@ export default function HakiReview() {
       const systemPrompt = `You are an AI document review assistant specializing in legal documents. 
 You help lawyers review, analyze, and understand legal documents. 
 ${uploadedFile ? `The user has uploaded a document: ${uploadedFile}.` : "No document has been uploaded yet."}
-Provide clear, accurate analysis and suggestions for legal documents.`
+Provide clear, accurate analysis and suggestions for legal documents. Base your responses only on the provided context and user messages.`
 
-      const response = await chatCompletion(userMessage.text, systemPrompt)
+      const documentContext = uploadedFileContent
+        ? `Here is the document context (truncated to ${MAX_CONTEXT_CHARS} characters):\n${uploadedFileContent}`
+        : ""
+
+      const response = await chatCompletion(
+        documentContext
+          ? `${documentContext}\n\nUser question:\n${userMessage.text}`
+          : userMessage.text,
+        systemPrompt
+      )
 
       updateProcessState("hakiReview", (prev) => {
         const filteredMessages = prev.chatMessages.filter((msg) => msg.id !== loadingMessageId)
@@ -120,7 +182,7 @@ Provide clear, accurate analysis and suggestions for legal documents.`
             ...filteredMessages,
             {
               id: (Date.now() + 2).toString(),
-              text: response.content || "I apologize, but I couldn't generate a response. Please try again.",
+              text: formatAnalysisResponse(response.content || "I apologize, but I couldn't generate a response. Please try again."),
               sender: "bot",
               timestamp: new Date(),
             },
@@ -138,7 +200,9 @@ Provide clear, accurate analysis and suggestions for legal documents.`
             ...filteredMessages,
             {
               id: (Date.now() + 2).toString(),
-              text: `An unexpected error occurred: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
+              text: formatAnalysisResponse(
+                `An unexpected error occurred: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`
+              ),
               sender: "bot",
               timestamp: new Date(),
               error: true,
@@ -179,6 +243,7 @@ Provide clear, accurate analysis and suggestions for legal documents.`
                       updateProcessState("hakiReview", (prev) => ({
                         ...prev,
                         uploadedFile: null,
+                        uploadedFileContent: "",
                       }))
                     }
                     className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"

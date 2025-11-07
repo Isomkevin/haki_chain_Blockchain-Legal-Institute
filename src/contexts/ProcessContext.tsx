@@ -46,6 +46,7 @@ interface HakiReviewState {
   message: string
   activeTab: string
   uploadedFile: string | null
+  uploadedFileContent: string
   chatMessages: ChatMessage[]
   isLoading: boolean
 }
@@ -89,6 +90,7 @@ const createInitialState = (): ProcessStore => ({
     message: "",
     activeTab: "chat",
     uploadedFile: null,
+    uploadedFileContent: "",
     chatMessages: [
       {
         id: "1",
