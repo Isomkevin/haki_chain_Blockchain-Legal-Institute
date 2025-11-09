@@ -90,12 +90,21 @@
   animation: fadeInUp 0.4s ease-out;
 }
 
-/* legal typography */
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: theme("fontFamily.legalSans");
+  background-color: theme("colors.legal.bg");
+  color: theme("colors.legal.base");
+}
+
 .legal-typography {
-  color: #1f2937;
-  font-family: "Times New Roman", "Georgia", serif;
+  color: theme("colors.legal.base");
+  font-family: theme("fontFamily.legal");
   line-height: 1.6;
-  font-size: 0.95rem;
+  font-size: 1rem;
   text-align: justify;
 }
 
@@ -105,29 +114,29 @@
 
 .legal-heading {
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   font-weight: 700;
-  text-align: center;
 }
 
 .legal-heading-1 {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
+  text-align: center;
 }
 
 .legal-heading-2 {
   font-size: 1.25rem;
+  text-align: left;
 }
 
 .legal-heading-3,
 .legal-heading-4 {
   font-size: 1.1rem;
   text-align: left;
-  margin-top: 1.5rem;
 }
 
 .legal-paragraph {
-  margin: 0;
   text-align: justify;
+  margin: 0;
 }
 
 .legal-strong {
@@ -139,9 +148,8 @@
 }
 
 .legal-list {
-  margin: 0 0 0 1.25rem;
+  margin: 0 0 0 1.5rem;
   padding: 0;
-  text-align: left;
 }
 
 .legal-list-disc {
@@ -157,10 +165,10 @@
 }
 
 .legal-blockquote {
-  border-left: 3px solid #1f2937;
+  border-left: 3px solid theme("colors.legal.accent");
   padding-left: 1rem;
+  background-color: rgba(15, 118, 110, 0.05);
   font-style: italic;
-  background-color: rgba(31, 41, 55, 0.04);
 }
 
 .legal-table-wrapper {
@@ -175,9 +183,12 @@
 
 .legal-table th,
 .legal-table td {
-  border: 1px solid rgba(31, 41, 55, 0.25);
+  border: 1px solid rgba(148, 163, 184, 0.6);
   padding: 0.5rem 0.75rem;
-  text-align: left;
+}
+
+.legal-table thead {
+  background-color: rgba(15, 118, 110, 0.1);
 }
 
 .legal-table-heading {
@@ -187,13 +198,14 @@
 
 .legal-code-inline {
   font-family: "Courier New", monospace;
-  background-color: rgba(31, 41, 55, 0.08);
+  background-color: rgba(15, 23, 42, 0.08);
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
 }
 
 .legal-code-block {
-  background-color: rgba(31, 41, 55, 0.08);
+  font-family: "Courier New", monospace;
+  background-color: rgba(15, 23, 42, 0.08);
   padding: 0.75rem;
   border-radius: 6px;
   overflow-x: auto;
@@ -201,6 +213,19 @@
 
 .legal-divider {
   border: none;
-  border-top: 1px solid rgba(31, 41, 55, 0.3);
+  border-top: 1px solid rgba(148, 163, 184, 0.5);
   margin: 1.5rem 0;
+}
+
+.legal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid theme("colors.legal.border");
+  background-color: theme("colors.legal.surface");
+  color: theme("colors.legal.accent");
+  font-size: 0.75rem;
+  font-weight: 600;
 }
