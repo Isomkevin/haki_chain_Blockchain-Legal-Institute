@@ -43,18 +43,10 @@ interface HakiDraftState {
 
 interface HakiLensState {
   showTour: boolean
-  activeTab: string
-  deepResearchMode: string
+  activeTab: "deep-research" | "case-database" | "ai-assistant"
+  deepResearchMode: "auto-detect" | "listing-crawl" | "single-case"
   searchUrl: string
-  caseSearchTerm: string
-  sortBy: string
-  aiQuestion: string
-  searching: boolean
-  searchResult: string
-  searchError: string | null
-  aiAnswer: string
-  aiLoading: boolean
-  aiError: string | null
+  lastDocumentId: string | null
 }
 
 interface HakiReviewState {
@@ -119,15 +111,7 @@ const createInitialState = (): ProcessStore => ({
     activeTab: "deep-research",
     deepResearchMode: "auto-detect",
     searchUrl: "",
-    caseSearchTerm: "",
-    sortBy: "date_created",
-    aiQuestion: "",
-    searching: false,
-    searchResult: "",
-    searchError: null,
-    aiAnswer: "",
-    aiLoading: false,
-    aiError: null,
+    lastDocumentId: null,
   },
   hakiReview: {
     showTour: false,

@@ -1,5 +1,5 @@
 /**
- * Kenya Law Scraper API Client
+ * Kenya Law Researchr API Client
  * Integrates with https://firecrawlscrape.onrender.com/
  */
 
@@ -11,14 +11,14 @@ class KenyaLawApiClient {
   }
 
   /**
-   * Scrape Kenya Law website
-   * @param {Object} params - Scraping parameters
-   * @param {string} params.url - Kenya Law URL to scrape
-   * @param {number} [params.limit=10] - Number of pages to scrape
-   * @param {boolean} [params.scrape_links=true] - Whether to scrape linked pages
-   * @returns {Promise<Object>} Scraping results
+   * Research Kenya Law website
+   * @param {Object} params - Researching parameters
+   * @param {string} params.url - Kenya Law URL to research
+   * @param {number} [params.limit=10] - Number of pages to research
+   * @param {boolean} [params.research_links=true] - Whether to research linked pages
+   * @returns {Promise<Object>} Researching results
    */
-  async scrapeKenyaLaw(params) {
+  async researchKenyaLaw(params) {
     try {
       const response = await fetch(`${this.baseUrl}/scrape`, {
         method: 'POST',
@@ -39,16 +39,16 @@ class KenyaLawApiClient {
 
       return await response.json();
     } catch (error) {
-      console.error('Error scraping Kenya Law:', error);
-      throw new Error(`Failed to scrape: ${error.message}`);
+      console.error('Error researching Kenya Law:', error);
+      throw new Error(`Failed to research: ${error.message}`);
     }
   }
 
   /**
-   * Chat with a scraped document
+   * Chat with a researchd document
    * @param {Object} params - Chat parameters
    * @param {string} params.message - User message/question
-   * @param {string} params.document_id - Document ID from scraping results
+   * @param {string} params.document_id - Document ID from researching results
    * @param {string} [params.context] - Additional context
    * @returns {Promise<Object>} Chat response
    */

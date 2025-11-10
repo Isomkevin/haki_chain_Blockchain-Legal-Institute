@@ -76,7 +76,7 @@ export default function ApiStatusTab() {
             {getStatusIcon()}
             <div>
               <h3 className="text-lg font-medium text-gray-900">
-                Kenya Law Scraper API
+                Kenya Law Researchr API
               </h3>
               <p className={`text-sm ${
                 status === 'healthy' ? 'text-green-700' : 
@@ -120,7 +120,7 @@ export default function ApiStatusTab() {
           <div>
             <span className="text-sm font-medium text-gray-700">Service:</span>
             <p className="text-sm text-gray-900">
-              Kenya Law Document Scraper
+              Kenya Law Document Researchr
             </p>
           </div>
         </div>
@@ -151,10 +151,10 @@ export default function ApiStatusTab() {
           <div className="border border-gray-200 rounded p-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">POST</span>
-              <span className="font-mono text-sm">/scrape</span>
+              <span className="font-mono text-sm">/research</span>
             </div>
             <p className="text-sm text-gray-600">
-              Scrape Kenya Law website pages and documents
+              Research Kenya Law website pages and documents
             </p>
           </div>
 
@@ -164,7 +164,7 @@ export default function ApiStatusTab() {
               <span className="font-mono text-sm">/chat</span>
             </div>
             <p className="text-sm text-gray-600">
-              Chat with scraped documents using AI
+              Chat with researchd documents using AI
             </p>
           </div>
 
@@ -196,19 +196,19 @@ export default function ApiStatusTab() {
         <div className="space-y-3 text-sm text-blue-700">
           <div className="flex items-start gap-2">
             <span className="font-medium">1.</span>
-            <span>Go to the <strong>Deep Research</strong> tab and enter a Kenya Law URL to scrape</span>
+            <span>Go to the <strong>Deep Research</strong> tab and enter a Kenya Law URL to research</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-medium">2.</span>
-            <span>After scraping, copy the document ID from the results</span>
+            <span>After researching, copy the document ID from the results</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-medium">3.</span>
-            <span>Use the <strong>AI Assistant</strong> tab to ask questions about the scraped document</span>
+            <span>Use the <strong>AI Assistant</strong> tab to ask questions about the researchd document</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-medium">4.</span>
-            <span>Browse your scraped documents in the <strong>Case Database</strong> tab</span>
+            <span>Browse your researchd documents in the <strong>Case Database</strong> tab</span>
           </div>
         </div>
       </div>

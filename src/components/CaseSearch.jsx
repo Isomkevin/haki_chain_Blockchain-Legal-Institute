@@ -16,7 +16,7 @@ export default function CaseSearch() {
     setError('')
     
     try {
-      const results = await apiClient.scrapeSearch({
+      const results = await apiClient.researchSearch({
         query: searchQuery,
         // Add other search parameters as needed
       })
@@ -29,15 +29,15 @@ export default function CaseSearch() {
     }
   }
 
-  const handleScrapeUrl = async (url) => {
+  const handleResearchUrl = async (url) => {
     setLoading(true)
     try {
-      const result = await apiClient.scrapeUrl(url)
-      console.log('Scraped data:', result)
+      const result = await apiClient.researchUrl(url)
+      console.log('Researchd data:', result)
       // You can add a toast notification here
-      alert('URL scraped successfully! Check console for details.')
+      alert('URL researchd successfully! Check console for details.')
     } catch (err) {
-      setError('Failed to scrape URL: ' + err.message)
+      setError('Failed to research URL: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -124,12 +124,12 @@ export default function CaseSearch() {
                   </div>
                   {result.url && (
                     <button
-                      onClick={() => handleScrapeUrl(result.url)}
+                      onClick={() => handleResearchUrl(result.url)}
                       disabled={loading}
                       className="ml-4 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
                     >
                       <ExternalLink className="w-3 h-3" />
-                      Scrape
+                      Research
                     </button>
                   )}
                 </div>

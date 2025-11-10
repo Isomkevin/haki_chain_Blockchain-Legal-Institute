@@ -59,30 +59,30 @@ class HakiLensApiClient {
     return this.request('/health')
   }
 
-  // Scraping methods
-  async scrapeUrl(url) {
-    return this.request('/scrape/url', {
+  // Researching methods
+  async researchUrl(url) {
+    return this.request('/research/url', {
       method: 'POST',
       body: JSON.stringify({ url })
     })
   }
 
-  async scrapeListing(listingData) {
-    return this.request('/scrape/listing', {
+  async researchListing(listingData) {
+    return this.request('/research/listing', {
       method: 'POST',
       body: JSON.stringify(listingData)
     })
   }
 
-  async scrapeCase(caseData) {
-    return this.request('/scrape/case', {
+  async researchCase(caseData) {
+    return this.request('/research/case', {
       method: 'POST',
       body: JSON.stringify(caseData)
     })
   }
 
-  async scrapeSearch(searchData) {
-    return this.request('/scrape/search', {
+  async researchSearch(searchData) {
+    return this.request('/research/search', {
       method: 'POST',
       body: JSON.stringify(searchData)
     })
