@@ -61,7 +61,8 @@ const getDefaultModel = (provider: LLMProvider): string => {
  */
 async function callOpenAI(
   messages: LLMMessage[],
-  config: LLMConfig
+  config: LLMConfig,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   if (!config.apiKey) {
     return {
@@ -79,6 +80,7 @@ async function callOpenAI(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${config.apiKey}`,
       },
+      signal,
       body: JSON.stringify({
         model: config.model || 'gpt-4o-mini',
         messages: messages.map(msg => ({
@@ -120,7 +122,8 @@ async function callOpenAI(
  */
 async function callAnthropic(
   messages: LLMMessage[],
-  config: LLMConfig
+  config: LLMConfig,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   if (!config.apiKey) {
     return {
@@ -143,6 +146,7 @@ async function callAnthropic(
         'x-api-key': config.apiKey,
         'anthropic-version': '2023-06-01',
       },
+      signal,
       body: JSON.stringify({
         model: config.model || 'claude-3-5-sonnet-20241022',
         max_tokens: config.maxTokens || 2000,
@@ -209,7 +213,8 @@ function isRetryableError(errorMessage: string, statusCode?: number): boolean {
  */
 async function callOpenRouter(
   messages: LLMMessage[],
-  config: LLMConfig
+  config: LLMConfig,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   if (!config.apiKey) {
     return {
@@ -230,6 +235,7 @@ async function callOpenRouter(
         'HTTP-Referer': window.location.origin, // Optional: for analytics
         'X-Title': 'HakiChain BLI Web App', // Optional: for analytics
       },
+      signal,
       body: JSON.stringify({
         model: config.model || 'openai/gpt-4o-mini',
         messages: messages.map(msg => ({
@@ -281,7 +287,8 @@ async function callOpenRouter(
  */
 async function callGemini(
   messages: LLMMessage[],
-  config: LLMConfig
+  config: LLMConfig,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   if (!config.apiKey) {
     return {
@@ -327,6 +334,7 @@ async function callGemini(
       headers: {
         'Content-Type': 'application/json',
       },
+      signal,
       body: JSON.stringify(requestBody),
     })
 
@@ -366,7 +374,8 @@ async function callGemini(
  */
 async function callLocal(
   messages: LLMMessage[],
-  config: LLMConfig
+  config: LLMConfig,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   const baseURL = config.baseURL || 'http://localhost:11434/v1'
   
@@ -377,6 +386,7 @@ async function callLocal(
         'Content-Type': 'application/json',
         ...(config.apiKey && { 'Authorization': `Bearer ${config.apiKey}` }),
       },
+      signal,
       body: JSON.stringify({
         model: config.model || 'llama2',
         messages: messages.map(msg => ({
@@ -421,7 +431,8 @@ async function callLocal(
 export async function callLLM(
   messages: LLMMessage[],
   customConfig?: Partial<LLMConfig>,
-  retryCount: number = 0
+  retryCount: number = 0,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   const config: LLMConfig = {
     ...getDefaultConfig(),
@@ -444,19 +455,19 @@ export async function callLLM(
   let response: LLMResponse
   switch (config.provider) {
     case 'openai':
-      response = await callOpenAI(messages, config)
+      response = await callOpenAI(messages, config, signal)
       break
     case 'anthropic':
-      response = await callAnthropic(messages, config)
+      response = await callAnthropic(messages, config, signal)
       break
     case 'openrouter':
-      response = await callOpenRouter(messages, config)
+      response = await callOpenRouter(messages, config, signal)
       break
     case 'gemini':
-      response = await callGemini(messages, config)
+      response = await callGemini(messages, config, signal)
       break
     case 'local':
-      response = await callLocal(messages, config)
+      response = await callLocal(messages, config, signal)
       break
     default:
       return {
@@ -467,11 +478,11 @@ export async function callLLM(
   }
 
   // Retry logic for retryable errors
-  if (response.error && response.retryable && retryCount < maxRetries) {
+  if (response.error && response.retryable && retryCount < maxRetries && !(signal?.aborted)) {
     // Exponential backoff: wait longer for each retry
     const delay = retryDelay * Math.pow(2, retryCount)
     await new Promise(resolve => setTimeout(resolve, delay))
-    return callLLM(messages, customConfig, retryCount + 1)
+    return callLLM(messages, customConfig, retryCount + 1, signal)
   }
 
   return response
@@ -483,7 +494,8 @@ export async function callLLM(
 export async function chatCompletion(
   userMessage: string,
   systemPrompt?: string,
-  customConfig?: Partial<LLMConfig>
+  customConfig?: Partial<LLMConfig>,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   const messages: LLMMessage[] = []
   
@@ -493,7 +505,7 @@ export async function chatCompletion(
   
   messages.push({ role: 'user', content: userMessage })
   
-  return callLLM(messages, customConfig)
+  return callLLM(messages, customConfig, 0, signal)
 }
 
 /**

@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 
 console.log("[ProcessContext] module evaluated")
 
-type ProcessKey = "hakiDraft" | "hakiLens" | "hakiReview"
+type ProcessKey = "hakiBot" | "hakiDraft" | "hakiLens" | "hakiReview"
 
 interface ChatMessage {
   id: string
@@ -47,17 +48,40 @@ interface HakiReviewState {
   activeTab: string
   uploadedFile: string | null
   uploadedFileContent: string
+  uploadedFileBuffer?: ArrayBuffer
+  uploadedFileType?: string
+  uploadedFileUrl?: string
   chatMessages: ChatMessage[]
+  annotations: Record<string, string>
   isLoading: boolean
 }
 
+interface HakiBotTranscript {
+  id: string
+  title: string
+  createdAt: string
+  messages: ChatMessage[]
+}
+
+interface HakiBotState {
+  contextChips: { id: string; label: string }[]
+  pinnedMessageIds: string[]
+  transcripts: HakiBotTranscript[]
+}
+
 type ProcessStore = {
+  hakiBot: HakiBotState
   hakiDraft: HakiDraftState
   hakiLens: HakiLensState
   hakiReview: HakiReviewState
 }
 
 const createInitialState = (): ProcessStore => ({
+  hakiBot: {
+    contextChips: [{ id: "default", label: "Matter: General" }],
+    pinnedMessageIds: [],
+    transcripts: [],
+  },
   hakiDraft: {
     showTour: false,
     category: "",
@@ -91,6 +115,9 @@ const createInitialState = (): ProcessStore => ({
     activeTab: "chat",
     uploadedFile: null,
     uploadedFileContent: "",
+    uploadedFileBuffer: undefined,
+    uploadedFileType: undefined,
+    uploadedFileUrl: undefined,
     chatMessages: [
       {
         id: "1",
@@ -99,6 +126,7 @@ const createInitialState = (): ProcessStore => ({
         timestamp: new Date(),
       },
     ],
+    annotations: {},
     isLoading: false,
   },
 })
@@ -130,12 +158,12 @@ export function ProcessProvider({ children }: { children: ReactNode }) {
     console.log("[ProcessContext] state change", state)
   }, [state])
 
-  const getProcessState = <K extends ProcessKey>(key: K): ProcessStore[K] => {
+  const getProcessState = useCallback(<K extends ProcessKey>(key: K): ProcessStore[K] => {
     console.log("[ProcessContext] getProcessState", key)
     return state[key]
-  }
+  }, [state])
 
-  const updateProcessState = <K extends ProcessKey>(
+  const updateProcessState = useCallback(<K extends ProcessKey>(
     key: K,
     updater: Partial<ProcessStore[K]> | ((prev: ProcessStore[K]) => ProcessStore[K])
   ) => {
@@ -153,9 +181,9 @@ export function ProcessProvider({ children }: { children: ReactNode }) {
         [key]: nextState,
       }
     })
-  }
+  }, [])
 
-  const resetProcessState = (key?: ProcessKey) => {
+  const resetProcessState = useCallback((key?: ProcessKey) => {
     setState((prev) => {
       if (key) {
         console.log("[ProcessContext] resetProcessState", key)
@@ -168,7 +196,7 @@ export function ProcessProvider({ children }: { children: ReactNode }) {
       console.log("[ProcessContext] resetProcessState ALL")
       return createInitialState()
     })
-  }
+  }, [])
 
   const value = useMemo(
     () => ({
@@ -177,7 +205,7 @@ export function ProcessProvider({ children }: { children: ReactNode }) {
       updateProcessState,
       resetProcessState,
     }),
-    [state]
+    [state, getProcessState, updateProcessState, resetProcessState]
   )
 
   return <ProcessContext.Provider value={value}>{children}</ProcessContext.Provider>
@@ -191,4 +219,13 @@ export function useProcess() {
   return context
 }
 
-export type { ProcessKey, ProcessStore, HakiDraftState, HakiLensState, HakiReviewState, ChatMessage }
+export type {
+  ProcessKey,
+  ProcessStore,
+  HakiBotState,
+  HakiDraftState,
+  HakiLensState,
+  HakiReviewState,
+  ChatMessage,
+  HakiBotTranscript,
+}

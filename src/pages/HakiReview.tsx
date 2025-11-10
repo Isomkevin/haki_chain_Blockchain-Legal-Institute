@@ -1,6 +1,17 @@
-import { useRef, useEffect } from "react"
+import { useRef, useEffect, useState, useMemo } from "react"
 import LawyerSidebar from "../components/LawyerSidebar"
-import { Eye, Upload, MessageSquare, FileText, Edit, FileSignature, Send, AlertCircle } from "lucide-react"
+import {
+  Eye,
+  Upload,
+  MessageSquare,
+  FileText,
+  Edit,
+  FileSignature,
+  Send,
+  AlertCircle,
+  StickyNote,
+  ListTree,
+} from "lucide-react"
 import TourGuide from "../components/TourGuide"
 import { chatCompletion } from "../lib/llm"
 import { LegalMarkdownRenderer } from "../components/LegalMarkdownRenderer"
@@ -8,6 +19,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { FullViewToggleButton } from "../components/FullViewToggleButton"
 import { useFullViewToggle } from "../hooks/useFullViewToggle"
 import { useProcess } from "../contexts/ProcessContext"
+import { LegalBadge } from "../components/LegalBadge"
+import { useLegalToast } from "../components/LegalToast"
 
 interface ChatMessage {
   id: string
@@ -18,12 +31,31 @@ interface ChatMessage {
 }
 
 export default function HakiReview() {
-  const { getProcessState, updateProcessState } = useProcess()
-  const reviewState = getProcessState("hakiReview")
+  const { state: processState, updateProcessState } = useProcess()
+  const reviewState = processState.hakiReview
+  const notify = useLegalToast()
   const { showTour, message, activeTab, uploadedFile, uploadedFileContent, chatMessages, isLoading } = reviewState
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const MAX_CONTEXT_CHARS = 6000
   const { isFullView, toggleFullView } = useFullViewToggle("hakireview-full-chat")
+  const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null)
+  const [annotationDraft, setAnnotationDraft] = useState("")
+  const clauseEntries = useMemo(() => {
+    const entries: { id: string; title: string }[] = []
+    chatMessages.forEach((chatMessage) => {
+      if (chatMessage.sender !== "bot" || !chatMessage.text) return
+      const lines = chatMessage.text.split("\n")
+      lines.forEach((line) => {
+        const trimmed = line.trim()
+        if (!trimmed) return
+        const normalized = trimmed.replace(/^#+\s*/, "")
+        if (/^(clause|section|article)/i.test(normalized) || /^[0-9]+(\.[0-9]+)*\s/.test(normalized)) {
+          entries.push({ id: chatMessage.id, title: normalized.slice(0, 120) })
+        }
+      })
+    })
+    return entries
+  }, [chatMessages])
 
   useEffect(() => {
     console.log("[HakiReview] mounted")
@@ -40,13 +72,27 @@ export default function HakiReview() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [chatMessages])
 
-  const extractTextFromFile = async (file: File) => {
+  const uploadedUrlRef = useRef<string | undefined>(reviewState.uploadedFileUrl)
+
+  useEffect(() => {
+    uploadedUrlRef.current = reviewState.uploadedFileUrl
+  }, [reviewState.uploadedFileUrl])
+
+  useEffect(() => {
+    return () => {
+      if (uploadedUrlRef.current) {
+        URL.revokeObjectURL(uploadedUrlRef.current)
+      }
+    }
+  }, [])
+
+  const extractTextFromFile = async (file: File, arrayBuffer: ArrayBuffer) => {
     if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
       const pdfjs = (await import("pdfjs-dist/build/pdf")) as any
       const workerSrc = await import("pdfjs-dist/build/pdf.worker?url")
       pdfjs.GlobalWorkerOptions.workerSrc = workerSrc.default || workerSrc
 
-      const uint8Array = new Uint8Array(await file.arrayBuffer())
+      const uint8Array = new Uint8Array(arrayBuffer)
       const pdf = await pdfjs.getDocument({ data: uint8Array }).promise
       let extracted = ""
 
@@ -65,11 +111,12 @@ export default function HakiReview() {
 
     if (file.name.toLowerCase().endsWith(".docx")) {
       const mammoth = (await import("mammoth")) as any
-      const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })
+      const { value } = await mammoth.extractRawText({ arrayBuffer }) 
       return value
     }
 
-    return await file.text()
+    const decoder = new TextDecoder("utf-8")
+    return decoder.decode(arrayBuffer)
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,7 +124,14 @@ export default function HakiReview() {
     if (!file) return
 
     try {
-      const content = await extractTextFromFile(file)
+      const arrayBuffer = await file.arrayBuffer()
+      const blob = new Blob([arrayBuffer], { type: file.type || "application/octet-stream" })
+      const content = await extractTextFromFile(file, arrayBuffer)
+      const objectUrl = URL.createObjectURL(blob)
+
+      if (reviewState.uploadedFileUrl) {
+        URL.revokeObjectURL(reviewState.uploadedFileUrl)
+      }
 
       updateProcessState("hakiReview", (prev) => {
         const fileMessage: ChatMessage = {
@@ -91,6 +145,9 @@ export default function HakiReview() {
           ...prev,
           uploadedFile: file.name,
           uploadedFileContent: content.slice(0, MAX_CONTEXT_CHARS),
+          uploadedFileBuffer: arrayBuffer,
+          uploadedFileType: file.type,
+          uploadedFileUrl: objectUrl,
           chatMessages: [...prev.chatMessages, fileMessage],
         }
       })
@@ -216,6 +273,54 @@ Provide clear, accurate analysis and suggestions for legal documents. Base your 
     }
   }
 
+  const openAnnotationEditor = (messageId: string) => {
+    setActiveAnnotationId(messageId)
+    setAnnotationDraft(reviewState.annotations[messageId] || "")
+  }
+
+  const handleAnnotationSave = () => {
+    if (!activeAnnotationId) return
+    const value = annotationDraft.trim()
+
+    updateProcessState("hakiReview", (prev) => {
+      const nextAnnotations = { ...prev.annotations }
+      if (value) {
+        nextAnnotations[activeAnnotationId] = value
+      } else {
+        delete nextAnnotations[activeAnnotationId]
+      }
+      return {
+        ...prev,
+        annotations: nextAnnotations,
+      }
+    })
+
+    notify({
+      title: value ? "Annotation saved" : "Annotation removed",
+      description: value ? "Your note is now pinned to this clause." : "The note has been cleared.",
+      variant: value ? "success" : "warning",
+    })
+
+    setActiveAnnotationId(null)
+    setAnnotationDraft("")
+  }
+
+  const handleAnnotationCancel = () => {
+    setActiveAnnotationId(null)
+    setAnnotationDraft("")
+  }
+
+  const scrollToClause = (messageId: string) => {
+    const target = document.getElementById(`message-${messageId}`)
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" })
+      target.classList.add("ring-2", "ring-teal-500/70", "ring-offset-2")
+      window.setTimeout(() => {
+        target.classList.remove("ring-2", "ring-teal-500/70", "ring-offset-2")
+      }, 1600)
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {showTour && <TourGuide onComplete={() => updateProcessState("hakiReview", { showTour: false })} />}
@@ -246,24 +351,65 @@ Provide clear, accurate analysis and suggestions for legal documents. Base your 
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -40 }}
                     transition={{ duration: 0.4, ease: "easeInOut" }}
-                    className="w-full lg:w-1/2"
+                    className="w-full lg:w-[55%]"
                   >
                     <div className="bg-white rounded-lg shadow-sm p-8">
                       <h2 className="text-lg font-semibold text-gray-900 mb-4">Document Preview</h2>
                       {uploadedFile ? (
-                        <div className="border border-gray-300 rounded-lg p-8 text-center">
-                          <FileText className="w-16 h-16 text-teal-600 mx-auto mb-4" />
-                          <h3 className="font-medium text-gray-900 mb-2">{uploadedFile}</h3>
-                          <p className="text-sm text-gray-600 mb-4">Document uploaded successfully</p>
-                          <button
-                            onClick={() => updateProcessState("hakiReview", (prev) => ({
-                              ...prev,
-                              uploadedFile: null,
-                            }))}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                          >
-                            Remove File
-                          </button>
+                        <div className="space-y-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{uploadedFile}</h3>
+                              <p className="text-sm text-gray-500">
+                                {reviewState.uploadedFileType || "Document"} ·{" "}
+                                {Math.min(uploadedFileContent.length, MAX_CONTEXT_CHARS)} characters indexed
+                              </p>
+                            </div>
+                            <LegalBadge icon={<FileText className="h-3 w-3" />}>
+                              Preview
+                            </LegalBadge>
+                          </div>
+                          {reviewState.uploadedFileUrl && reviewState.uploadedFileType?.includes("pdf") ? (
+                            <iframe
+                              src={reviewState.uploadedFileUrl}
+                              title="Document preview"
+                              className="w-full h-[420px] rounded-lg border border-gray-200 shadow-inner"
+                            />
+                          ) : (
+                            <div className="border border-gray-200 rounded-lg p-4 h-[420px] overflow-y-auto bg-gray-50">
+                              <LegalMarkdownRenderer content={uploadedFileContent} />
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={() => {
+                                if (reviewState.uploadedFileUrl) {
+                                  URL.revokeObjectURL(reviewState.uploadedFileUrl)
+                                }
+                                updateProcessState("hakiReview", (prev) => ({
+                                  ...prev,
+                                  uploadedFile: null,
+                                  uploadedFileContent: "",
+                                  uploadedFileBuffer: undefined,
+                                  uploadedFileType: undefined,
+                                  uploadedFileUrl: undefined,
+                                }))
+                              }}
+                              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                            >
+                              Remove File
+                            </button>
+                            {reviewState.uploadedFileUrl && (
+                              <a
+                                href={reviewState.uploadedFileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                              >
+                                Open in new tab
+                              </a>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
@@ -286,7 +432,7 @@ Provide clear, accurate analysis and suggestions for legal documents. Base your 
                 key="hakireview-chat"
                 layout
                 transition={{ duration: 0.4, ease: "easeInOut" }}
-                className={`w-full ${isFullView ? "" : "lg:w-1/2"}`}
+                className={`w-full ${isFullView ? "" : "lg:flex-1"}`}
               >
                 <div className="bg-white rounded-lg shadow-sm p-6 h-full flex flex-col">
                   <div className="flex gap-2 mb-4">
@@ -322,39 +468,98 @@ Provide clear, accurate analysis and suggestions for legal documents. Base your 
                   {activeTab === "chat" && (
                     <>
                       <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-                        {chatMessages.map((msg) => (
-                          <div
-                            key={msg.id}
-                            className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-                          >
+                        {chatMessages.map((msg) => {
+                          const isBotMessage = msg.sender === "bot" && !msg.error
+                          const annotation = reviewState.annotations[msg.id]
+                          return (
                             <div
-                              className={`max-w-[85%] px-4 py-2 rounded-lg ${
-                                msg.sender === "user"
-                                  ? "bg-blue-600 text-white rounded-br-none"
-                                  : msg.error
-                                  ? "bg-red-100 text-red-800 rounded-bl-none border border-red-300"
-                                  : "bg-gray-100 text-gray-800 rounded-bl-none"
-                              }`}
+                              key={msg.id}
+                              className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
                             >
-                              {msg.error ? (
-                                <>
-                                  <div className="flex items-center gap-1 mb-1">
-                                    <AlertCircle className="w-3 h-3" />
-                                    <p className="text-xs font-semibold">Error</p>
-                                  </div>
+                              <div
+                                id={`message-${msg.id}`}
+                                className={`max-w-[85%] px-4 py-3 rounded-lg transition ring-offset-2 ${
+                                  msg.sender === "user"
+                                    ? "bg-blue-600 text-white rounded-br-none"
+                                    : msg.error
+                                    ? "bg-red-100 text-red-800 rounded-bl-none border border-red-300"
+                                    : "bg-gray-100 text-gray-800 rounded-bl-none"
+                                }`}
+                              >
+                                {msg.error ? (
+                                  <>
+                                    <div className="flex items-center gap-1 mb-1">
+                                      <AlertCircle className="w-3 h-3" />
+                                      <p className="text-xs font-semibold">Error</p>
+                                    </div>
+                                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                                  </>
+                                ) : msg.sender === "bot" ? (
+                                  <LegalMarkdownRenderer content={msg.text} />
+                                ) : (
                                   <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                                </>
-                              ) : msg.sender === "bot" ? (
-                                <LegalMarkdownRenderer content={msg.text} />
-                              ) : (
-                                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                              )}
-                              <p className={`text-xs mt-2 opacity-70 ${msg.sender === "user" ? "text-blue-100" : "text-gray-600"}`}>
-                                {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                              </p>
+                                )}
+                                <p
+                                  className={`text-xs mt-2 opacity-70 ${
+                                    msg.sender === "user" ? "text-blue-100" : "text-gray-600"
+                                  }`}
+                                >
+                                  {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                </p>
+
+                                {isBotMessage && (
+                                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                                    {annotation && (
+                                      <div className="inline-flex items-center gap-2 text-xs text-teal-700 bg-teal-50 border border-teal-200 px-2 py-1 rounded-full">
+                                        <StickyNote className="h-3.5 w-3.5" />
+                                        Note attached
+                                      </div>
+                                    )}
+                                    <button
+                                      onClick={() => openAnnotationEditor(msg.id)}
+                                      className="ml-auto inline-flex items-center gap-1 text-xs text-teal-700 hover:text-teal-900 focus:outline-none"
+                                    >
+                                      <StickyNote className="h-3.5 w-3.5" />
+                                      {annotation ? "Edit note" : "Add note"}
+                                    </button>
+                                  </div>
+                                )}
+
+                                {annotation && (
+                                  <div className="mt-2 rounded-lg border border-teal-200 bg-white/70 px-3 py-2 text-xs text-teal-900">
+                                    {annotation}
+                                  </div>
+                                )}
+
+                                {activeAnnotationId === msg.id && (
+                                  <div className="mt-3 space-y-2">
+                                    <textarea
+                                      value={annotationDraft}
+                                      onChange={(e) => setAnnotationDraft(e.target.value)}
+                                      rows={3}
+                                      className="w-full rounded-lg border border-teal-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                                      placeholder="Add your legal analysis, follow-up, or to-do..."
+                                    />
+                                    <div className="flex justify-end gap-2 text-sm">
+                                      <button
+                                        onClick={handleAnnotationCancel}
+                                        className="px-3 py-1.5 text-gray-600 hover:text-gray-800"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        onClick={handleAnnotationSave}
+                                        className="px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                                      >
+                                        Save note
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                         <div ref={messagesEndRef} />
                       </div>
                       <div className="pt-4">
@@ -397,6 +602,40 @@ Provide clear, accurate analysis and suggestions for legal documents. Base your 
                   )}
                 </div>
               </motion.div>
+              <AnimatePresence initial={false} mode="sync">
+                {!isFullView && clauseEntries.length > 0 && (
+                  <motion.div
+                    key="hakireview-clause-nav"
+                    layout
+                    initial={{ opacity: 0, x: 40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 40 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="w-full lg:w-64"
+                  >
+                    <div className="bg-white rounded-lg shadow-sm p-5 h-full">
+                      <div className="flex items-center gap-2 mb-4">
+                        <ListTree className="h-4 w-4 text-teal-600" />
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                          Clause Navigator
+                        </h3>
+                      </div>
+                      <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                        {clauseEntries.map((entry, index) => (
+                          <button
+                            key={`${entry.id}-${index}`}
+                            onClick={() => scrollToClause(entry.id)}
+                            className="w-full text-left text-xs bg-gray-50 hover:bg-teal-50 border border-gray-200 hover:border-teal-200 rounded-lg px-3 py-2 transition"
+                          >
+                            <span className="block font-medium text-gray-900 truncate">{entry.title}</span>
+                            <span className="text-[11px] text-gray-500">Clause reference • {index + 1}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </motion.div>
         </div>

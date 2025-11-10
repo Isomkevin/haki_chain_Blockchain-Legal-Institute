@@ -1,6 +1,8 @@
+import { ReactNode } from "react"
+
 interface LegalBadgeProps {
-  children: React.ReactNode
-  icon?: React.ReactNode
+  children: ReactNode
+  icon?: ReactNode
   tone?: "default" | "accent" | "danger"
   className?: string
 }
