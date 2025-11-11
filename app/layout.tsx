@@ -9,7 +9,7 @@ const _geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono
 // const siteUrl = 'https://hakichain.co.ke'
 
 const siteUrl = 'https://hakichain-blockchain-legal-institute.vercel.app/'
-const siteName = 'HakiChain'
+const siteName = 'HakiChain Blockchain Legal Institute'
 const siteTitle = 'HakiChain | AI x Blockchain-Powered Legal Platform'
 const siteDescription =
   'HakiChain connects lawyers, NGOs, and donors with blockchain-backed legal bounties, milestone-based escrow, and AI assistants tailored for African justice systems.'
