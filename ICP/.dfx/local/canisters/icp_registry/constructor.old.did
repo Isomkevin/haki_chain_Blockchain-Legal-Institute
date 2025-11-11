@@ -1,0 +1,54 @@
+// ---------------------------
+// ICP Registry Candid Interface
+// ---------------------------
+
+// ---------------------------
+// MetadataRecord
+// ---------------------------
+type MetadataRecord = record {
+  record_id : nat64;
+  document_id : nat64;
+  metadata : text;
+  owner : principal;
+  timestamp : nat64;
+  metadata_hash : text;
+};
+
+// ---------------------------
+// DetectionMatch
+// ---------------------------
+type DetectionMatch = record {
+  url : text;
+  similarity : float64;
+  excerpt : opt text;
+};
+
+// ---------------------------
+// StoryMetadataRecord
+// ---------------------------
+type StoryMetadataRecord = record {
+  record_id : nat64;
+  document_id : nat64;
+  metadata : text;
+  owner : principal;
+  timestamp : nat64;
+  metadata_hash : text;
+  matches : vec DetectionMatch;
+};
+
+// ---------------------------
+// Service Interface
+// ---------------------------
+service : {
+  // Metadata endpoints
+  store_metadata: (nat64, text) -> (MetadataRecord);
+  get_record: (nat64) -> (opt MetadataRecord) query;
+  list_records: () -> (vec MetadataRecord) query;
+  get_by_document: (nat64) -> (opt MetadataRecord) query;
+
+  // Story Metadata endpoints
+  store_story_metadata: (nat64, text, vec DetectionMatch) -> (StoryMetadataRecord);
+  get_story_record: (nat64) -> (opt StoryMetadataRecord) query;
+  list_story_records: () -> (vec StoryMetadataRecord) query;
+  get_story_by_document: (nat64) -> (opt StoryMetadataRecord) query;
+}

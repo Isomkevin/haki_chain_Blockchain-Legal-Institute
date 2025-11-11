@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "canisters": {
+    "icp_registry": {
+      "type": "rust",
+      "main": "src/lib.rs",
+      "candid": "icp_registry.did",
+      "package": "icp_registry"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env"
+}
