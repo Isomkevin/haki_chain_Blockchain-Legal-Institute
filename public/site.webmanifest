@@ -1,0 +1,26 @@
+{
+  "name": "HakiChain",
+  "short_name": "HakiChain",
+  "description": "HakiChain connects lawyers, NGOs, and donors with blockchain-backed legal bounties, escrowed milestones, and AI-powered legal assistants tailored for African justice systems.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "lang": "en",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
+  "icons": [
+    {
+      "src": "/hakichain-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ]
+}
+

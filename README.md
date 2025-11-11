@@ -439,7 +439,7 @@ Your HakiChain platform is now ready to revolutionize legal services in Kenya an
 
 **Platform**: HakiChain v1.0
 **Last Updated**: October 31, 2025
-**Contact**: support@hakichain.com
+**Contact**: support@hakichain.co.ke
 
 ### Persistent Workflow State
 

@@ -1,6 +1,6 @@
 const DEFAULT_FIRM_NAME = "HakiChain Advocates LLP"
 const DEFAULT_FIRM_ADDRESS = "1st Floor, Haki Towers, Parliament Road, Nairobi"
-const DEFAULT_FIRM_CONTACT = "P.O. Box 12345-00100 Nairobi | Tel: +254 700 000000 | Email: info@hakichain.com"
+const DEFAULT_FIRM_CONTACT = "P.O. Box 12345-00100 Nairobi | Tel: +254 700 000000 | Email: info@hakichain.co.ke"
 
 export interface LegalLetterContext {
   documentTitle: string

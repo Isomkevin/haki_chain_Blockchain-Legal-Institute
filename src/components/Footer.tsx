@@ -52,8 +52,8 @@ export default function Footer() {
           <div>
             <h4 className="font-bold mb-4">Contact</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>Email: <a href="mailto:info@hakichain.com" className="hover:text-teal-400 transition">info@hakichain.com</a></li>
-              <li>Support: <a href="mailto:support@hakichain.com" className="hover:text-teal-400 transition">support@hakichain.com</a></li>
+              <li>Email: <a href="mailto:info@hakichain.co.ke" className="hover:text-teal-400 transition">info@hakichain.co.ke</a></li>
+              <li>Support: <a href="mailto:support@hakichain.co.ke" className="hover:text-teal-400 transition">support@hakichain.co.ke</a></li>
               <li>Phone: <a href="tel:+254011015464" className="hover:text-teal-400 transition">+254(0)11015464</a></li>
             </ul>
           </div>
