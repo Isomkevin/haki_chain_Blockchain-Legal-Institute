@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://hakichain.co.ke/sitemap.xml
+Sitemap: https://hakichain-blockchain-legal-institute.vercel.app/sitemap.xml
 

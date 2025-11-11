@@ -6,9 +6,11 @@ import './globals.css'
 const _geist = Geist({ subsets: ['latin'], variable: '--font-geist' })
 const _geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
-const siteUrl = 'https://hakichain.co.ke'
+// const siteUrl = 'https://hakichain.co.ke'
+
+const siteUrl = 'https://hakichain-blockchain-legal-institute.vercel.app/'
 const siteName = 'HakiChain'
-const siteTitle = 'HakiChain | Blockchain-Powered Legal Platform'
+const siteTitle = 'HakiChain | AI x Blockchain-Powered Legal Platform'
 const siteDescription =
   'HakiChain connects lawyers, NGOs, and donors with blockchain-backed legal bounties, milestone-based escrow, and AI assistants tailored for African justice systems.'
 const siteKeywords = [
@@ -50,7 +52,7 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: `${siteUrl}/placeholder-logo.png`,
+        url: `${siteUrl}/hakichain-logo.png`,
         width: 1200,
         height: 630,
         alt: 'HakiChain Legal Platform Preview',
