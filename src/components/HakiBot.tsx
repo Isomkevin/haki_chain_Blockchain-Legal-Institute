@@ -310,7 +310,7 @@ they should consult with a qualified lawyer. Be concise but thorough in your res
             key="hakibot-conversation"
             layout
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="flex-1 flex flex-col bg-white"
+            className="flex-1 flex flex-col bg-white overflow-hidden"
           >
             <div className="border-b border-gray-200 px-4 py-3 flex flex-wrap items-center gap-2 text-sm bg-gray-50">
               <button
@@ -428,7 +428,7 @@ they should consult with a qualified lawyer. Be concise but thorough in your res
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 16 }}
                   transition={{ duration: 0.2 }}
-                  className="border-t border-blue-100/60 bg-blue-50/70 px-4 py-3 space-y-3"
+                  className="border-t border-blue-100/60 bg-blue-50/70 px-4 py-0.1 space-y-0.1"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -444,7 +444,7 @@ they should consult with a qualified lawyer. Be concise but thorough in your res
                       Dismiss
                     </button>
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-0.1">
                     {QUICK_QUESTIONS.map((question, index) => (
                       <button
                         key={index}
