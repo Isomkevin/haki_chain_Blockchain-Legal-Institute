@@ -7,6 +7,7 @@
 ## 📋 Quick Start
 
 ### Prerequisites
+
 - Node.js 16+ (LTS recommended)
 - npm or yarn
 - Supabase account (free tier available)
@@ -18,7 +19,7 @@
 npm install
 
 # 2. Create .env.local with your Supabase and LLM credentials
-# (See SETUP_GUIDE.md and LLM_SETUP.md for details)
+# (See SETUP_GUIDE.md and docs/LLM_SETUP.md for details)
 
 # 3. Run the app
 npm run dev
@@ -31,8 +32,9 @@ Visit `http://localhost:5173` 🚀
 HakiChain's AI features (HakiBot, HakiDraft, HakiLens, HakiReview) require LLM API configuration.
 
 **Quick Setup:**
+
 1. Create `.env.local` in the project root
-2. Add your LLM provider configuration (see `LLM_SETUP.md` for details)
+2. Add your LLM provider configuration (see `docs/LLM_SETUP.md` for details)
 
 **Example for OpenAI:**
 \`\`\`env
@@ -41,13 +43,14 @@ VITE_LLM_API_KEY=your-openai-api-key-here
 \`\`\`
 
 **Supported Providers:**
+
 - OpenAI (GPT-4o-mini, GPT-4o) - Recommended
 - Anthropic (Claude 3.5 Sonnet, Claude 3 Opus)
 - OpenRouter (Unified gateway for 100+ models)
 - Google Gemini (gemini-pro, gemini-pro-vision)
 - Local models (Ollama, custom endpoints)
 
-See `LLM_SETUP.md` for complete setup instructions and troubleshooting.
+See `docs/LLM_SETUP.md` for complete setup instructions and troubleshooting.
 
 ---
 
@@ -64,31 +67,37 @@ HakiChain is a comprehensive platform that connects lawyers with clients through
 ### Key Features
 
 ✅ **Complete Legal Practice Management**
+
 - Case dashboard with timeline tracking
 - Deadline management and alerts
 - Progress analytics and reporting
 
 ✅ **Client Matching System**
+
 - AI-powered lawyer-case matching
 - Verified client profiles
 - Smart recommendations
 
 ✅ **Bounty Marketplace**
+
 - Access funded legal cases
 - Transparent payment terms
 - Milestone-based compensation
 
 ✅ **Secure Payments**
+
 - Blockchain-based escrow
 - Automated payment releases
 - Smart contract integration
 
 ✅ **Admin Dashboard**
+
 - Lawyer application management
 - Approval/rejection workflow
 - Performance analytics
 
 ✅ **Legal Chatbot (HakiBot)**
+
 - AI assistant for legal questions
 - Kenyan law guidance
 - Quick question suggestions
@@ -101,6 +110,7 @@ HakiChain is a comprehensive platform that connects lawyers with clients through
 ```bash
 npm run dev
 ```
+
 - Hot module replacement enabled
 - Debug mode active
 - Dev tools available
@@ -125,6 +135,7 @@ npm run typecheck
 ## 👥 User Roles
 
 ### 1. **Lawyer**
+
 - Browse and apply for bounties
 - Submit case proposals
 - Track milestone payments
@@ -133,6 +144,7 @@ npm run typecheck
 **Demo**: lawyer@example.com
 
 ### 2. **NGO/Organization**
+
 - Create legal bounties
 - Set funding goals and milestones
 - Track case progress
@@ -141,6 +153,7 @@ npm run typecheck
 **Demo**: ngo@example.com
 
 ### 3. **Donor**
+
 - Browse and fund legal causes
 - Track donation impact
 - Receive case updates
@@ -149,6 +162,7 @@ npm run typecheck
 **Demo**: donor@example.com
 
 ### 4. **Admin**
+
 - Review lawyer applications
 - Approve/reject applications
 - Monitor platform metrics
@@ -160,6 +174,7 @@ npm run typecheck
 ## 🔑 Key Workflows
 
 ### Creating a Legal Bounty (NGO)
+
 1. Sign up as NGO
 2. Go to Dashboard
 3. Click "Create Bounty"
@@ -169,6 +184,7 @@ npm run typecheck
 7. Receive lawyer applications
 
 ### Applying for a Case (Lawyer)
+
 1. Sign up as Lawyer
 2. Browse "Explore Bounties"
 3. Click case to view details
@@ -177,6 +193,7 @@ npm run typecheck
 6. Wait for admin approval
 
 ### Donating to a Case (Donor)
+
 1. Sign up as Donor
 2. Browse "Explore Bounties"
 3. Choose a case
@@ -187,6 +204,7 @@ npm run typecheck
 8. See progress bar update
 
 ### Approving Lawyers (Admin)
+
 1. Login as Admin (or use special credentials)
 2. Go to Admin Dashboard
 3. Review pending applications
@@ -238,6 +256,7 @@ hakichain/
 ## 🗄️ Database Schema
 
 ### Tables Required
+
 - **profiles**: User information and roles
 - **bounties**: Legal cases/bounties
 - **milestones**: Case progress milestones
@@ -250,7 +269,17 @@ See SETUP_GUIDE.md for complete SQL schema.
 
 ## 🎨 Features Breakdown
 
+### Blockchain Infrastructure
+
+- `BountyRegistry`, `BountyEscrow`, and `HakiToken` smart contracts manage provenance, escrow, and tokenization.
+- Cross-chain proofs reference Story Protocol assets, ICP canisters, and Constellation DAG hashes for transparent audit trails.
+- Hardhat scripts (`npm run chain:*`) cover compile/test/deploy flows; deployment artifacts should be surfaced to Supabase for the frontend.
+- Backend service wrappers (Story, ICP, DAG) enrich each bounty with off-chain metadata before anchoring on-chain.
+
+> Need the full deep dive? Read [`BLOCKCHAIN_INFRA.md`](./docs/BLOCKCHAIN_INFRA.md) for architectural diagrams, workflows, and security considerations.
+
 ### Home Page
+
 - Hero section with CTA buttons
 - Feature showcase with animations
 - Benefits section with real images
@@ -258,6 +287,7 @@ See SETUP_GUIDE.md for complete SQL schema.
 - Call-to-action footer
 
 ### Documentation Page
+
 - Expandable/collapsible sections
 - Legal Bounties complete guide
 - Lawyer Matching system explanation
@@ -266,6 +296,7 @@ See SETUP_GUIDE.md for complete SQL schema.
 - Compliance and legal information
 
 ### Bounty Detail Page
+
 - Full case description
 - Milestone tracking with status
 - Funding progress bar
@@ -274,6 +305,7 @@ See SETUP_GUIDE.md for complete SQL schema.
 - Donor list
 
 ### Admin Dashboard
+
 - Statistics overview
 - Pending applications table
 - Approve/reject actions
@@ -281,6 +313,7 @@ See SETUP_GUIDE.md for complete SQL schema.
 - Status tracking
 
 ### HakiBot Chatbot
+
 - AI legal assistant
 - Kenyan law guidance
 - Quick question suggestions
@@ -370,6 +403,7 @@ git push origin main
 
 
 ### Deploy to Other Platforms
+
 - **Netlify**: Connect GitHub → Deploy
 - **AWS Amplify**: Connect GitHub → Deploy
 - **Self-hosted**: `npm run build` → upload `dist/` folder
@@ -381,17 +415,20 @@ See SETUP_GUIDE.md for detailed deployment instructions.
 ## 📞 Support & Documentation
 
 ### In-App Resources
+
 - **Documentation Page**: Comprehensive guides
 - **HakiBot**: Quick legal questions
 - **About Page**: Platform information
 
 ### External Resources
+
 - [Supabase Docs](https://supabase.com/docs)
 - [React Docs](https://react.dev)
 - [Tailwind CSS](https://tailwindcss.com)
 - [Vite Docs](https://vitejs.dev)
 
 ### Getting Help
+
 1. Read SETUP_GUIDE.md
 2. Check Documentation page
 3. Review ADMIN_WORKFLOW.md
@@ -403,12 +440,14 @@ See SETUP_GUIDE.md for detailed deployment instructions.
 ## 🎓 Learning Resources
 
 ### For Developers
+
 - React: Learn from `src/pages/` for complex state
 - TypeScript: See types in `src/lib/supabase.ts`
 - Tailwind: Check `src/index.css` for custom animations
 - Supabase: See `src/lib/supabase.ts` for queries
 
 ### For Users
+
 - Read Documentation page for all features
 - Use HakiBot for legal guidance
 - Check Demo credentials in Login page
@@ -425,6 +464,7 @@ HakiChain Platform © 2025 All Rights Reserved
 ## 🙌 Contributing
 
 For bug reports or feature requests:
+
 1. Create detailed issue
 2. Include reproduction steps
 3. Add screenshots/videos if relevant

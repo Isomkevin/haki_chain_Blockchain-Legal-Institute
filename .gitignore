@@ -42,7 +42,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Markdown files
-*.md
+# *.md
 
 # Exempt README.md from being ignored
 !README.md
